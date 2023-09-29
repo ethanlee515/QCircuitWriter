@@ -23,6 +23,10 @@ class Input:
     def __init__(self, value):
         self.value = value
 
+class Output:
+    def __init__(self, value):
+        self.value = value
+
 class WireStatus(Enum):
     ON = 0
     OFF = 1
@@ -44,7 +48,7 @@ class QCircuit:
             self.columns.append(col)
         return self.columns[t]
 
-    def insertContent(self, wire, content, t=-1):
+    def insert(self, wire, content, t=-1):
         if t == -1:
             t = len(self)
         column = self.getColumn(t)
@@ -71,13 +75,24 @@ class QCircuit:
             elif isinstance(content, Input) and w == wire:
                 wire_status[wire] = WireStatus.ON
                 return f"\\lstick{{{content.value}}}"
+            elif isinstance(content, Output) and w == wire:
+                if wire_status[wire] == WireStatus.ON:
+                    x = r"\qw"
+                else:
+                    x = r"\cw"
+                wire_status[wire] = WireStatus.OFF
+                return f"\\rstick{{{content.value}}}{x}"
             elif isinstance(content, Etc) and w == wire:
                 wire_status[wire] = WireStatus.ELLIPSIS
                 return f"\\cdots"
-            # TODO elif measurement
+            elif isinstance(content, Measure) and w == wire:
+                wire_status[wire] = WireStatus.CLASSICAL
+                return f"\\meter"
         # Content not found - maybe just a wire?
         if wire_status[wire] == WireStatus.ON:
             return r"\qw"
+        elif wire_status[wire] == WireStatus.CLASSICAL:
+            return r"\cw"
         elif wire_status[wire] == WireStatus.ELLIPSIS:
             wire_status[wire] = WireStatus.ON
             return ""
@@ -96,13 +111,39 @@ class QCircuit:
 
 if __name__ == "__main__":
     ct = QCircuit(8)
-    # start with control gates...
+    # Inputs
     t = 0
-    ct.insertContent(0, Ctrl(1), t)
-    ct.insertContent(1, Ctrl(1), t)
-    ct.insertContent(2, Ctrl(1), t)
-    ct.insertContent(3, Ctrl(-1), t)
-    ct.insertContent(4, Input(r"\ket{\delta_1}"))
+    ct.insert(4, Input(r"\ket{0}"), t)
+    # Setting up the graph edges
     t += 1
+    ct.insert(0, Ctrl(1), t)
+    ct.insert(1, Ctrl(1), t)
+    ct.insert(2, Ctrl(1), t)
+    ct.insert(3, Ctrl(-1), t)
+    ct.insert(5, Input(r"\ket{\delta_1}"), t)
+    # Honest behavior 1
+    t += 1
+    ct.insert(0, Gate(r"T^{\delta_1}"), t)
+    ct.insert(5, Ctrl(-5), t)
+    t += 1
+    ct.insert(0, Gate("H"), t)
+    # Attack 1
+    t += 1
+    ct.insert(0, Gate("U_1", 6), t)
+    # Measure 1
+    t += 1
+    ct.insert(0, Measure(), t)
+    # output and new delta
+    t += 1
+    ct.insert(0, Output("b_1"), t)
+    ct.insert(6, Input(r"\ket{\delta_2}"), t)
+    # Honest behavior 2
+    t += 1
+    ct.insert(1, Gate(r"T^{\delta_2}"), t)
+    ct.insert(6, Ctrl(-5), t)
+    t += 1
+    ct.insert(1, Gate("H"), t)
+
+
 
     print(ct.getLaTeX())
