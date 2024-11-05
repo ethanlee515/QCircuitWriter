@@ -2,6 +2,9 @@
 
 from qcircuit import *
 
+print("note: very large circuit, might want something like `\Qcircuit @C=.3em @R=.7em {`")
+print()
+
 ct = QCircuit(10)
 # Inputs
 t = 0
