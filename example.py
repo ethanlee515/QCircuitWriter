@@ -2,6 +2,8 @@
 
 from qcircuit import *
 
+# Example using verifiable MBQC by Fitzsimons and Kashefi (arXiv:1203.5217)
+
 print("note: very large circuit, might want something like `\Qcircuit @C=.3em @R=.7em {`")
 print()
 
