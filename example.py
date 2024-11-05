@@ -117,7 +117,7 @@ ct.addWire(8)
 ct.insert(8, Input(r"\ket{0}"), 0)
 ## Add secret wire
 ct.addWire(0)
-ct.insert(0, Input(r"\ket{\allcoins}"), 0)
+ct.insert(0, Input(r"\ket{\nu}"), 0)
 ## Compute first delta
 ct.addCol(t1 + 3)
 ct.insert(0, Ctrl(1), t1 + 3)
