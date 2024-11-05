@@ -78,6 +78,45 @@ class QCircuit:
         column = self.getColumn(t)
         column[wire] = content
 
+    """
+    Clears a gate (or anything else).
+    If multigate, clears the ghosts too.
+    """
+    def delete(self, wire, t):
+        del self.columns[t][wire]
+
+    def addWire(self, h):
+        assert(0 <= h)
+        assert(h <= self.num_wires)
+        self.num_wires += 1
+        columns = list()
+        for col in self.columns:
+            new_col = dict()
+            for w in col:
+                # enlarge CTRL if it crosses the new wire
+                content = col[w]
+                if isinstance(content, Ctrl):
+                    if w < h and w + content.target >= h:
+                        content.target += 1
+                    elif w >= h and w + content.target < h:
+                        content.target -= 1
+                # enlarge multigate if it crosses the new wire
+                if isinstance(content, Gate):
+                    if w < h and w + content.size - 1 >= h:
+                        content.size += 1
+                if w < h:
+                    new_col[w] = content
+                else:
+                    new_col[w + 1] = content
+            columns.append(new_col)
+        self.columns = columns
+
+    def addCol(self, t):
+        self.columns.insert(t, dict())
+
+    def delCol(self, t):
+        del self.columns[t]
+
     def getLaTeXforCell(self, c, wire, wire_status):
         column = self.getColumn(c)
         for w in column:
